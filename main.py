@@ -15,6 +15,7 @@ class Graphs:
         self.CODIGO_DE_PAIS_PERMI04 = 'PERMI01_4'
         self.EDAD = 'PERNA01'
         self.NIVEL_EDUCATIVO_MAS_ALTO = 'PERED03_1'
+        self.ESTADO_CONYUGAL = 'PEREC04'
         pass
     
     def create_df_for_graph_1(self):
@@ -30,7 +31,7 @@ class Graphs:
         dataframe.columns = convert_columns_todate(dataframe)
         dataframe.index = convert_index_to_country(dataframe)
         
-        #dataframe.to_excel('Dataframe grafico 1.xlsx')
+        dataframe.to_excel('Dataframe grafico 1.xlsx')
 
     def create_df_for_graph_2(self):
         dataframe = pd.read_csv('INE-Personas-DB/personas_ext_26_02.csv', usecols=[self.EDAD, self.LUGAR_DE_NACIMIENTO, self.CODIGO_DE_PAIS_PERMI04 , self.ANO_DE_LLEGADA_A_URUGUAY, self.ID_CENSO])
@@ -48,7 +49,7 @@ class Graphs:
         countries = convert_index_to_country(dataframe)
         dataframe.index = countries
 
-        #dataframe.to_excel('Dataframe grafico 2.xlsx')
+        dataframe.to_excel('Dataframe grafico 2.xlsx')
 
     def create_df_for_graph_3(self):
         dataframe = pd.read_csv('INE-Personas-DB/personas_ext_26_02.csv', usecols=[self.LUGAR_DE_NACIMIENTO, self.CODIGO_DE_PAIS_PERMI04 , self.ANO_DE_LLEGADA_A_URUGUAY, self.NIVEL_EDUCATIVO_MAS_ALTO, self.ID_CENSO])
@@ -67,27 +68,26 @@ class Graphs:
         index = convert_index_to_country(dataframe)
         dataframe.index = index
 
-        #dataframe.to_excel('Dataframe grafico 3.xlsx')
+        dataframe.to_excel('Dataframe grafico 3.xlsx')
 
     def create_df_for_graph_4(self):
-        dataframe = pd.read_csv('INE-Personas-DB/personas_ext_26_02.csv', usecols=[self.CODIGO_DE_PAIS_PERMI06, self.ANO_DE_LLEGADA_A_URUGUAY, self.LUGAR_DE_NACIMIENTO, self.CODIGO_DE_PAIS_PERMI04 , self.ID_CENSO])
+        dataframe = pd.read_csv('INE-Personas-DB/personas_ext_26_02.csv', usecols=[self.CODIGO_DE_PAIS_PERMI06, self.ANO_DE_LLEGADA_A_URUGUAY, self.LUGAR_DE_NACIMIENTO, self.CODIGO_DE_PAIS_PERMI04 , self.ID_CENSO, self.ESTADO_CONYUGAL])
         
         # Que haya nacido en otro país.
         dataframe = dataframe.loc[dataframe[self.LUGAR_DE_NACIMIENTO] == 4]
-
-        # Iteramos sobre cada elemento y le agregamos la categoría de continente.
-        continents: str
         
         # Tomamos una tabla pivote que relacione año de llegada al país con país de origen.
-        dataframe = dataframe.pivot_table(values=[self.ID_CENSO], columns=[self.ANO_DE_LLEGADA_A_URUGUAY], index=[self.CODIGO_DE_PAIS_PERMI06], aggfunc='count')
+        dataframe = dataframe.pivot_table(values=[self.ID_CENSO], columns=[self.ESTADO_CONYUGAL], index=[self.CODIGO_DE_PAIS_PERMI06], aggfunc='count')
 
-        dataframe.fillna(value=0, inplace=True)
-        dataframe.columns = convert_columns_todate(dataframe)
-        dataframe.index = convert_index_to_country(dataframe)
-        
-        #dataframe.to_excel('Dataframe grafico 1.xlsx')
+        # Convertimos los códigos de país en su respectivo continente y los agrupamos.
+        dataframe.index = convert_index_to_continent(dataframe)
+        dataframe = dataframe.groupby(dataframe.index).sum()
+
+        dataframe.fillna(value=0, inplace=True)        
+        dataframe.to_excel('Dataframe grafico 4.xlsx')
 
 graphs = Graphs()
 graphs.create_df_for_graph_1()
 graphs.create_df_for_graph_2()
 graphs.create_df_for_graph_3()
+graphs.create_df_for_graph_4()
